@@ -114,9 +114,10 @@
   )
 
 
-
-(defparameter root nil)
-(defparameter size 0)
+(defun initiateTree ()
+    (defparameter root nil)
+    (defparameter nodesAdded '())
+)
 
 (defun addToTree (value)
     (if (null root)
@@ -128,7 +129,7 @@
        )
       )
     )
-    (setf size (+ size 1))
+    (setf nodesAdded (append nodesAdded (list value)))
     T
 )
 
@@ -205,6 +206,7 @@
             (if (< comp 0)
               (progn 
                 (setf result (insert value (getLeftChild node)))
+                (setf returnValue 'nil)
                 (if (not (null result))
                   (progn
                     (setf threeNode (newThreeNode (getValue result) (getValue node)))
@@ -264,6 +266,7 @@
             (if (< leftComp 0)
               (progn
                 (setf result (insert value (getLeftChild threeNode)))
+                (setf threeNode node)
                 (if (not (null result))
                   (progn
                     (setf returnValue (splitNode threeNode (getValue result)))
@@ -295,11 +298,12 @@
                   (progn
                     (print "both are not less than 0")
                     (setf result (insert value (getRightChild threeNode)))
+                    (setf threeNode node)
                     (if (not (null result))
                       (progn
                         (setf returnValue (splitNode threeNode (getValue result)))
                         (setLeftChild (getLeftChild returnValue) (getLeftChild threeNode))
-                        (setRightChild (getLeftChild returnValue) (getMiddleNode threeNode))
+                        (setRightChild (getLeftChild returnValue) (getMiddleChild threeNode))
                         (setLeftChild (getRightChild returnValue) (getLeftChild result))
                         (setRightChild (getRightChild returnValue) (getRightChild result))
                         (unlinkNode threeNode)
@@ -349,6 +353,38 @@
   (return-from splitNode parent)
 )
 
+(defun removeNode (value)
+    (initiateTree)
+    (setf nodes (list root 'nil))
+    (loop while (> (length nodes) 1) do
+        (setf N (first nodes))
+        (setf nodes (rest nodes))
+        (cond
+          ((null N)
+           (progn
+             (setf nodes (append nodes (list '())))))
+          ((isTwoNode N)
+           (progn 
+             (removeHelper value (getValue N))
+             (unless (null (getLeftChild N))
+               (setf nodes (append nodes (list (getLeftChild N)))))
+             (unless (null (getRightChild N))
+               (setf nodes (append nodes (list (getRightChild N)))))))
+          ((isThreeNode N) 
+           (progn
+             (removeHelper value (getValue N))
+             (removeHelper value (getRightVal N))
+             (unless (null (getLeftChild N))
+               (setf nodes (append nodes (list (getLeftChild N)))))
+             (unless (null (getMiddleChild N))
+               (setf nodes (append nodes (list (getMiddleChild N)))))
+             (unless (null (getRightChild N))
+               (setf nodes (append nodes (list (getRightChild N)))))))))
+)
+
+(defun removeHelper (Remvalue  value)
+  (if (not (equal Remvalue value))
+    (addToTree value)))
 
 (defun printTree (topNode)
   (setf nodes (list topNode 'nil))
@@ -382,6 +418,7 @@
 
 (defun test ()
 
+  (initiateTree)
   (addToTree 'a)
   (addToTree 'l)
   (addToTree 'g)
@@ -394,5 +431,8 @@
   (addToTree 'm)
   (addToTree 's)
   (printTree root)
-  (print "done")
+
+  (removeNode 'a)
+  (printTree root)
+  ;;(print "done")
 )
