@@ -1,0 +1,5 @@
+done- make function that calculates cost from a to b
+done- get all the nodes the given node can go to or is attached to.
+
+- implement the iterative deepening search
+ 
