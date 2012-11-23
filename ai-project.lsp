@@ -39,18 +39,16 @@
     (addEdge 'c '1 'g)
     (print (getCost 'a 'b))
     (printTable)
-    (look 'a 'd 1)
-    (iterDeepSearch 'a 'g)
+    (iterDeepSearch 'a 'f)
 )
 
 ;;; a is starting node 
 ;;; b is the goal
 (defun iterDeepSearch(start goal)
-    (setf depth 1)
-    (setf foundGoal null)
-    (loop while (= foundGoal T) do
-        (setf foundGoal (look start goal depth)) 
-        (setf depth (+ depth 1))
+    (setf depth 0)
+    (loop while (>= depth 0) do
+        (if (equal (look start goal depth) T) (return "Found"))
+        (setf depth (+ 1 depth))
     )
 )
 
@@ -59,9 +57,16 @@
             T
          )
         ((> depth 0)
-         (mapcar #'(lambda (x) (look x goal (- depth 1))) (getNodesConnected start))
+         (some #'(lambda (x) (look x goal (- depth 1))) (getNodesConnected start))
          )
         (t
           nil
           ))
+)
+
+
+(defun astar (start goal)
+    
+
+  
 )
