@@ -42,6 +42,8 @@
     (iterDeepSearch 'a 'f)
 )
 
+
+;;; --------Iterative deepening depth first search ------
 ;;; a is starting node 
 ;;; b is the goal
 (defun iterDeepSearch(start goal)
@@ -65,8 +67,16 @@
 )
 
 
-(defun astar (start goal)
-    
+;; ---------------- a star search --------------
+(defstruct node
 
+(defun astar (start goal)
+    (setf closedset ())
+    (setf openset ()) ;; get all the nodes that are in the hashmap
+
+    (loop while (> (length openset) 0)
+
+    
+    )
   
 )
