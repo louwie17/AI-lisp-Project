@@ -18,6 +18,15 @@
                 using (hash-value value)
                         do (format t "The value associated with the key ~S is ~S~%" key value))
 )
+
+(defun giveAllKeys ()
+    (setf keys (list))
+    (loop for key being the hash-keys of *nodes*
+          using (hash-value value)
+          do (append keys (list key)))
+    (return keys)
+)
+
 ;; assuming they are attached
 (defun getCost (a b)
     (setf connected (gethash a *nodes*))
@@ -71,16 +80,20 @@
 ;;; fill the table with the nodes and the struct as the list for the
 ;;; a star algorithm
 (defstruct node
-;;; list of nodes attached with the distances between just like the 
-;;; iterative search one.
-;;; g_score
-;;; came_from which is just a node
+    attached
+    g_score
+    came_from
+)
+
+(defun makeStructs ()
+    
+
 )
 
 (defun astar (start goal heuristic)
     (setf closedset ())
     (setf openset ()) ;; get all the nodes that are in the hashmap
-
+    (makeStructs)
     (setf g_score 0)
     (setf f_score (+ g_score heuristic))
 
