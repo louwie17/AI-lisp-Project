@@ -4,18 +4,20 @@
   leftChild
   rightChild
   middleChild
+  leftVal
+  rightVal
 )
 
 (defun newNode ()
-  (return (make-Node))
+  (make-Node)
 )
 
-(defun newTwoNode (node)
-  (return (make-Node :leftChild node :typeNode 'twoNode))
+(defun newTwoNode (value)
+  (make-Node :leftVal value :typeNode 'twoNode)
 )
 
 (defun newThreeNode (leftVal rightVal)
-  (return (make-Node :leftChild leftVal :rightChild rightVal :typeNode 'threeNode))
+  (make-Node :leftVal leftVal :rightVal rightVal :typeNode 'threeNode)
 )
 
 (defun setLeftChild (node leftChild)
@@ -48,13 +50,20 @@
 )
 
 (defun getParent (node)
-  (return (Node-parent node))
+  (Node-parent node)
 )
 
 (defun setParent (node parent)
   (setf (Node-parent node) parent)
 )
 
+(defun getValue (node)
+    (Node-leftVal node)
+)
+
+(defun getRightVal (node)
+  (Node-rightVal node)
+)
 
 (defun isTwoNode (node)
   (if (equal 'twoNode (Node-typeNode node))
@@ -67,13 +76,35 @@
   (return (not (isTwoNode node)))
 )
 
+(defun isTerminal (node)
+  (return-from isTerminal 
+               (and (null (getLeftChild node))
+                    (null (getRightChild node))))
+)
+
+(defun replaceChild (node currentChild newChild)
+    (if (equalp currentChild newChild)
+      (setLeftChild node newChild)
+      (if (equalp currentChild (getRightChild node))
+        (setRightChild node newChild)
+        (if (not (equalp (getMiddleChild node) currentChild))
+          (setMiddleChild node newChild)
+          )
+        )
+      )
+    (setParent newChild node)
+    (setParent currentChild null)
+  )
+
+
+
 (defparameter root nil)
 (defparameter size 0)
 
 (defun addToThree (value)
     (if (null root)
       (setf root (newTwoNode value))
-      (lambda
+      (lambda ()
        (setf result (insert value root))
        (if (not (null result))
          (setf root result)
@@ -81,7 +112,7 @@
       )
     )
     (setf size (+ size 1))
-    (return 'T)
+    T
 )
 
 (defun contains (value)
@@ -90,26 +121,160 @@
 
 (defun compareTo (nodeA nodeB)
 
-  (if (equalp nodeA nodeB) (return 0))
+  (if (equalp nodeA nodeB) (return-from compareTo 0))
   (if (and (numberp nodeA) (numberp nodeB))
-    (if (< nodeA nodeB) (return -1) (return 1))
-    (if (string< nodeA nodeB) (return -1) (return 1))
+    (if (< nodeA nodeB) (return-from compareTo -1) (return-from compareTo 1))
+    (if (string< nodeA nodeB) (return-from compareTo -1) (return-from compareTo 1))
     )
 )
 
 (defun findNode (node value)
-  (if (null node) (return null))
+  (if (null node) (return-from findNode 'nil))
 
   (if (equal 'threeNode (Node-typeNode node))
-    (lambda 
+    (progn 
       (setf leftComp (compareTo value (getValue (getLeftNode node))))
       (setf rightComp (compareTo value (getValue (getRightNode node))))
       (if (and (= leftComp 0) (= rightComp 0))
         (return node)
         )
       (if (< leftComp 0)
-        (
+         (return (findNode (getLeftChild node) value))
+         (if (< rightComp 0)
+           (return (findNode (getMiddleChild node) value))
+           (return (findNode (getRightChild node) value))
+           )
+         )
+        )
+    (progn
+      (setf comp (compareTo value (getValue node)))
+      (if (= comp 0)
+        (return-from findNode node)
+        (if (< comp 0)
+          (return-from findNode node (findNode (getLeftChild node) value))
+          (return-from findNode node (findNode (getRightChild node) value))
+          )
         )
     )
+  )
 )
 
+(defun unlinkNode (node)
+  (removeChildren node)
+  (setParent node nil)
+)
+
+(defun insert (value node)
+  
+  (if (equal 'twoNode (Node-typeNode node))
+    (progn
+        (setf comp (compareTo value (getValue node)))
+        
+        (if (isTerminal node)
+          (progn 
+            (if (equal comp 0)
+                (return-from insert "Duplicate"))
+            (setf thnode (newThreeNode value (getValue node)))
+            (setf parent (getParent node))
+            (if (not (null parent))
+                (replaceChild parent node thnode)
+                (setf root thnode)
+            )
+          )
+          (progn 
+            (if (< comp 0)
+              (progn 
+                (setf result (insert value (getLeftChild node)))
+                (if (not (null result))
+                  (progn
+                    (setf threeNode (newThreeNode (getValue result) (getValue node)))
+                    (setRightChild threeNode (getRightChild node))
+                    (setMiddleChild threeNode (getRightChild result))
+                    (setLeftChild threeNode (getLeftChild result))
+                    (if (not (null (getParent node)))
+                      (replaceChild (getParent node) node threeNode)
+                      (setf root threeNode)
+                      )
+                    (unlinkNode node)
+                    )
+                  )
+                )
+                (if (> comp 0)
+                  (progn
+                    (setf result (insert value (getRightChild node)))
+                    (if (not (null result))
+                        (progn
+                            (setf threeNode (newThreeNode (getValue result) (getValue node)))
+                            (setLeftChild threeNode (getLeftChild node))
+                            (setMiddleChild threeNode (getLeftChild result))
+                            (setRightChild threeNode (getRightChild result))
+                            (if (not (null (getParent node)))
+                              (replaceChild (getParent node) node threeNode)
+                              (setf root threeNode)
+                              )
+                            (unlinkNode node)
+                            )
+                        )
+                    )
+                    (return-from insert "Duplicate")
+                  ) 
+                )
+            )
+        )
+      )
+    (progn  ;; three node
+        (setf threeNode node)
+
+        (setf leftComp (compareTo value (getValue threeNode)))
+        (setf rightComp (compareTo value (getRightVal threeNode)))
+
+        (if (or (= leftComp 0) (= rightComp 0))
+          (return-from insert "Duplicate")
+        )
+
+        (if (isTerminal threeNode)
+          (setf returnValue (splitNode threeNode value))
+          (progn
+            (if (< leftComp 0)
+              (progn
+                (setf result (insert value (getLeftChild threNode)))
+                (if (not (null result))
+                  (progn
+                    (setf returnValue (splitNode threeNode (getValue result)))
+                    (setLeftChild (getLeftChild returnValue) (getLeftChild result))
+                    (setRightChild (
+
+          )
+          )
+
+
+      )
+    )
+  )
+
+
+(defun splitNode (threeNode value)
+  (if (< (compareTo value (getValue threeNode)) 0)
+    (progn 
+      (setf mini value)
+      (setf middle (getValue threeNode))
+      (setf maxi (getRightVal threeNode))
+      )
+    (if (< (compareTo value (getRightVal threeNode)) 0)
+      (progn
+        (setf mini (getValue threeNode))
+        (setf middle value)
+        (setf maxi (getRightVal threeNode))
+        )
+      (progn
+        (setf mini (getValue threeNode))
+        (setf maxi value)
+        (setf middle (getRightVal threeNode))
+        )
+      )
+    )
+  (setf parent (newTwoNode middle))
+  (setLeftChild parent (newTwoNode mini))
+  (setRightChild parent (newTwoNode maxi))
+  (return-from splitNode parent)
+)
