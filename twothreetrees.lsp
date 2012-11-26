@@ -27,12 +27,20 @@
       )
 )
 
+(defun getLeftChild (node)
+  (Node-leftChild node)
+  )
+
 (defun setRightChild (node rightChild)
   (setf (Node-rightChild node) rightChild)
   (if (not (null rightChild))
     (setf (Node-parent rightChild) node)
     )
 )
+
+(defun getRightChild (node)
+  (Node-rightChild node)
+  )
 
 (defun removeChildren (node)
   (setf (Node-leftChild node) nil)
@@ -104,8 +112,9 @@
 (defun addToThree (value)
     (if (null root)
       (setf root (newTwoNode value))
-      (lambda ()
+      (progn
        (setf result (insert value root))
+       (print result)
        (if (not (null result))
          (setf root result)
        )
@@ -116,7 +125,7 @@
 )
 
 (defun contains (value)
-  (return (not (null (findNode root value))))
+  (return (not (null (findNode node value))))
 )
 
 (defun compareTo (nodeA nodeB)
@@ -173,7 +182,7 @@
         (if (isTerminal node)
           (progn 
             (if (equal comp 0)
-                (return-from insert "Duplicate"))
+                (return-from insert 'null))
             (setf thnode (newThreeNode value (getValue node)))
             (setf parent (getParent node))
             (if (not (null parent))
@@ -216,7 +225,7 @@
                             )
                         )
                     )
-                    (return-from insert "Duplicate")
+                    (return-from insert 'null)
                   ) 
                 )
             )
@@ -227,9 +236,10 @@
 
         (setf leftComp (compareTo value (getValue threeNode)))
         (setf rightComp (compareTo value (getRightVal threeNode)))
-
+        (print leftComp)
+        (print rightComp)
         (if (or (= leftComp 0) (= rightComp 0))
-          (return-from insert "Duplicate")
+          (return-from insert 'null)
         )
 
         (if (isTerminal threeNode)
@@ -237,19 +247,54 @@
           (progn
             (if (< leftComp 0)
               (progn
-                (setf result (insert value (getLeftChild threNode)))
+                (setf result (insert value (getLeftChild threeNode)))
                 (if (not (null result))
                   (progn
                     (setf returnValue (splitNode threeNode (getValue result)))
                     (setLeftChild (getLeftChild returnValue) (getLeftChild result))
-                    (setRightChild (
-
+                    (setRightChild (getLeftChild returnValue) (getRightChild result))
+                    (setLeftChild (getRightChild returnValue) (getMiddleChild threeNode))
+                    (setRightChild (getRightChild returnValue) (getRightChild threeNode))
+                    (unlinkNode threeNode)
+                  )
+                )
+               )
+               (if (< rightComp 0)
+                 (progn
+                   (setf result (insert value (getMiddleChild threeNode)))
+                   (print result)
+                   (if (not (null result))
+                     (progn
+                       (setf returnValue (splitNode threeNode (getValue result)))
+                       (setLeftChild (getLeftChild returnValue) (getLeftChild threeNode))
+                       (setRightChild (getLeftChild returnValue) (getLeftChild result))
+                       (setLeftChild (getRightChild returnValue) (getRightChild result))
+                       (setRightChild (getRightChild returnValue) (getRightChild threeNode))
+                       (unlinkNode threeNode)
+                     )
+                     (print "is null")
+                  )
+                  (progn
+                    (setf result (insert value (getRightChild threeNode)))
+                    (if (not (null result))
+                      (progn
+                        (setf returnValue (splitNode threeNode (getValue result)))
+                        (setLeftChild (getLeftChild returnValue) (getLeftChild threeNode))
+                        (setRightChild (getLeftChild returnValue) (getMiddleNode threeNode))
+                        (setLeftChild (getRightChild returnValue) (getLeftChild result))
+                        (setRightChild (getRightChild returnValue) (getRightChild result))
+                        (unlinkNode threeNode)
+                      )
+                    )
+                    )
+                  )
+                 )
+               )
+            )
           )
-          )
-
-
-      )
+        )
     )
+    (return-from insert returnValue)
   )
 
 
