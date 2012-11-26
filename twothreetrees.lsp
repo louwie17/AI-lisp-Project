@@ -17,7 +17,11 @@
 )
 
 (defun newThreeNode (leftVal rightVal)
-  (make-Node :leftVal leftVal :rightVal rightVal :typeNode 'threeNode)
+  (setf comp (compareTo leftVal rightVal))
+  (if (< comp 0)
+    (make-Node :leftVal leftVal :rightVal rightVal :typeNode 'threeNode)
+    (make-Node :leftVal rightVal :rightVal leftVal :typeNode 'threeNode)
+    )
 )
 
 (defun setLeftChild (node leftChild)
@@ -76,7 +80,7 @@
 (defun isTwoNode (node)
   (if (equal 'twoNode (Node-typeNode node))
     (return 'T)
-    (return 'null)
+    (return 'nil)
     )
   )
 
@@ -84,8 +88,8 @@
   (return (not (isTwoNode node)))
 )
 
-(defun isTerminal (node)
-  (return-from isTerminal 
+(defun isLeave (node)
+  (return-from isLeave 
                (and (null (getLeftChild node))
                     (null (getRightChild node))))
 )
@@ -109,12 +113,12 @@
 (defparameter root nil)
 (defparameter size 0)
 
-(defun addToThree (value)
+(defun addToTree (value)
     (if (null root)
       (setf root (newTwoNode value))
       (progn
        (setf result (insert value root))
-       (print result)
+       (print (not (null result)))
        (if (not (null result))
          (setf root result)
        )
@@ -174,15 +178,18 @@
 )
 
 (defun insert (value node)
-  
+  (print "Insert")
+  (setf returnValue 'nil) 
   (if (equal 'twoNode (Node-typeNode node))
     (progn
+      (print "twoNode")
         (setf comp (compareTo value (getValue node)))
-        
-        (if (isTerminal node)
-          (progn 
+       (print comp) 
+        (if (isLeave node)
+          (progn
+            (print "isleave node")
             (if (equal comp 0)
-                (return-from insert 'null))
+                (return-from insert 'nil))
             (setf thnode (newThreeNode value (getValue node)))
             (setf parent (getParent node))
             (if (not (null parent))
@@ -190,7 +197,8 @@
                 (setf root thnode)
             )
           )
-          (progn 
+          (progn
+            (print "is not leave node")
             (if (< comp 0)
               (progn 
                 (setf result (insert value (getLeftChild node)))
@@ -225,26 +233,27 @@
                             )
                         )
                     )
-                    (return-from insert 'null)
+                    (return-from insert 'nil)
                   ) 
                 )
             )
         )
       )
     (progn  ;; three node
-        (setf threeNode node)
-
+      (setf threeNode node)
+      (print "is three node")
         (setf leftComp (compareTo value (getValue threeNode)))
         (setf rightComp (compareTo value (getRightVal threeNode)))
         (print leftComp)
         (print rightComp)
         (if (or (= leftComp 0) (= rightComp 0))
-          (return-from insert 'null)
+          (return-from insert 'nil)
         )
 
-        (if (isTerminal threeNode)
+        (if (isLeave threeNode)
           (setf returnValue (splitNode threeNode value))
           (progn
+            (print "not a leave")
             (if (< leftComp 0)
               (progn
                 (setf result (insert value (getLeftChild threeNode)))
@@ -275,6 +284,7 @@
                      (print "is null")
                   )
                   (progn
+                    (print "both are not less than 0")
                     (setf result (insert value (getRightChild threeNode)))
                     (if (not (null result))
                       (progn
@@ -294,11 +304,15 @@
           )
         )
     )
+    (print "got out of splitnode")
     (return-from insert returnValue)
   )
 
 
 (defun splitNode (threeNode value)
+  (print "splitNode")
+  (print (compareTo value (getValue threeNode)))
+  (print (compareTo value (getRightVal threeNode)))
   (if (< (compareTo value (getValue threeNode)) 0)
     (progn 
       (setf mini value)
@@ -318,8 +332,19 @@
         )
       )
     )
+  (print mini)
+  (print maxi)
   (setf parent (newTwoNode middle))
   (setLeftChild parent (newTwoNode mini))
   (setRightChild parent (newTwoNode maxi))
   (return-from splitNode parent)
+)
+
+
+(defun test ()
+
+  (addToTree 'a)
+  (addToTree 'b)
+  (addToTree 'c)
+  (print "done")
 )
