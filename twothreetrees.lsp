@@ -53,13 +53,16 @@
 
 (defun setMiddleChild (node middleChild)
   (if (equal 'threeNode (Node-typeNode node))
-    (lambda (setf (Node-middleChild node) middleChild)
+    (progn (setf (Node-middleChild node) middleChild)
       (if (not (null middleChild))
         (setf (Node-parent middleChild) node)
      )
     )
     )
 )
+
+(defun getMiddleChild (node)
+  (Node-middleChild node))
 
 (defun getParent (node)
   (Node-parent node)
@@ -79,13 +82,13 @@
 
 (defun isTwoNode (node)
   (if (equal 'twoNode (Node-typeNode node))
-    (return 'T)
-    (return 'nil)
+    (return-from isTwoNode 'T)
+    (return-from isTwoNode 'nil)
     )
   )
 
 (defun isThreeNode (node)
-  (return (not (isTwoNode node)))
+  (return-from isThreeNode (not (isTwoNode node)))
 )
 
 (defun isLeave (node)
@@ -95,17 +98,19 @@
 )
 
 (defun replaceChild (node currentChild newChild)
-    (if (equalp currentChild newChild)
+  (print "called replace Child")
+  (if (equalp currentChild (getLeftChild node))
       (setLeftChild node newChild)
       (if (equalp currentChild (getRightChild node))
         (setRightChild node newChild)
-        (if (not (equalp (getMiddleChild node) currentChild))
+        (if (equalp (getMiddleChild node) currentChild)
           (setMiddleChild node newChild)
           )
         )
       )
     (setParent newChild node)
-    (setParent currentChild null)
+    (setParent currentChild 'nil)
+    T
   )
 
 
@@ -118,7 +123,6 @@
       (setf root (newTwoNode value))
       (progn
        (setf result (insert value root))
-       (print (not (null result)))
        (if (not (null result))
          (setf root result)
        )
@@ -178,13 +182,12 @@
 )
 
 (defun insert (value node)
-  (print "Insert")
+  (format t "~% Insert ~A Node ~A ~%" value (getValue node))
   (setf returnValue 'nil) 
   (if (equal 'twoNode (Node-typeNode node))
     (progn
-      (print "twoNode")
         (setf comp (compareTo value (getValue node)))
-       (print comp) 
+        (format t "TwoNode comp: ~A " comp)
         (if (isLeave node)
           (progn
             (print "isleave node")
@@ -219,17 +222,22 @@
                 (if (> comp 0)
                   (progn
                     (setf result (insert value (getRightChild node)))
+                    (setf returnValue 'nil)
+                    (print "Came back from insert ~%")
                     (if (not (null result))
                         (progn
                             (setf threeNode (newThreeNode (getValue result) (getValue node)))
                             (setLeftChild threeNode (getLeftChild node))
                             (setMiddleChild threeNode (getLeftChild result))
                             (setRightChild threeNode (getRightChild result))
+                            (format t "threeNode ~A ~A ~%" (getValue threeNode) (getRightVal threeNode))
                             (if (not (null (getParent node)))
                               (replaceChild (getParent node) node threeNode)
-                              (setf root threeNode)
+                             (setf root threeNode)
                               )
                             (unlinkNode node)
+                            (format t "Root: ~A ~A ~%" (getValue root) (getRightVal root))
+                            ;;(return-from insert 'nil)
                             )
                         )
                     )
@@ -244,8 +252,7 @@
       (print "is three node")
         (setf leftComp (compareTo value (getValue threeNode)))
         (setf rightComp (compareTo value (getRightVal threeNode)))
-        (print leftComp)
-        (print rightComp)
+        (format t "Left:~A Right:~A~%" leftComp rightComp)
         (if (or (= leftComp 0) (= rightComp 0))
           (return-from insert 'nil)
         )
@@ -266,12 +273,14 @@
                     (setRightChild (getRightChild returnValue) (getRightChild threeNode))
                     (unlinkNode threeNode)
                   )
+                  (return-from insert 'nil)
                 )
                )
                (if (< rightComp 0)
                  (progn
+                   (print (getValue node))
                    (setf result (insert value (getMiddleChild threeNode)))
-                   (print result)
+                   (setf threeNode node)
                    (if (not (null result))
                      (progn
                        (setf returnValue (splitNode threeNode (getValue result)))
@@ -281,7 +290,7 @@
                        (setRightChild (getRightChild returnValue) (getRightChild threeNode))
                        (unlinkNode threeNode)
                      )
-                     (print "is null")
+                     (print "is null"))
                   )
                   (progn
                     (print "both are not less than 0")
@@ -296,7 +305,6 @@
                         (unlinkNode threeNode)
                       )
                     )
-                    )
                   )
                  )
                )
@@ -304,15 +312,17 @@
           )
         )
     )
+    (if (not (null returnValue))
+        (format t "ReturnVal: ~A ~A ~A" (getValue (getLeftChild returnValue))
+                (getValue returnValue) (getValue (getRightChild returnValue))))
     (print "got out of splitnode")
     (return-from insert returnValue)
   )
 
 
 (defun splitNode (threeNode value)
+  
   (print "splitNode")
-  (print (compareTo value (getValue threeNode)))
-  (print (compareTo value (getRightVal threeNode)))
   (if (< (compareTo value (getValue threeNode)) 0)
     (progn 
       (setf mini value)
@@ -332,19 +342,57 @@
         )
       )
     )
-  (print mini)
-  (print maxi)
   (setf parent (newTwoNode middle))
   (setLeftChild parent (newTwoNode mini))
   (setRightChild parent (newTwoNode maxi))
+  (format t "Splitnode: ~A ~A ~A ~%" mini middle maxi)
   (return-from splitNode parent)
 )
+
+
+(defun printTree (topNode)
+  (setf nodes (list topNode 'nil))
+  (loop while (> (length nodes) 1) do
+        (setf N (first nodes))
+        (setf nodes (rest nodes))
+        (cond
+          ((null N)
+           (progn
+             (format t "~%")
+             (setf nodes (append nodes (list '())))))
+          ((isTwoNode N)
+           (progn 
+             (format t "(~A) " (getValue N))
+             (unless (null (getLeftChild N))
+               (setf nodes (append nodes (list (getLeftChild N)))))
+             (unless (null (getRightChild N))
+               (setf nodes (append nodes (list (getRightChild N)))))))
+          ((isThreeNode N) 
+           (progn
+             (format t "(~A)(~A) " (getValue N) (getRightVal N))
+             (unless (null (getLeftChild N))
+               (setf nodes (append nodes (list (getLeftChild N)))))
+             (unless (null (getMiddleChild N))
+               (setf nodes (append nodes (list (getMiddleChild N)))))
+             (unless (null (getRightChild N))
+               (setf nodes (append nodes (list (getRightChild N))))))))))
+ 
+
 
 
 (defun test ()
 
   (addToTree 'a)
-  (addToTree 'b)
-  (addToTree 'c)
+  (addToTree 'l)
+  (addToTree 'g)
+  (addToTree 'o)
+  (printTree root)
+  (addToTree 'r)
+  (addToTree 'i)
+  (addToTree 't)
+  (addToTree 'h)
+  (addToTree 'm)
+  (addToTree 's)
+  (printTree root)
   (print "done")
 )
