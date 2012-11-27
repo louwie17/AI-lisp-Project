@@ -1,0 +1,46 @@
+[1]> (load 'twothreetrees.lsp)
+;; Loading file twothreetrees.lsp ...
+;; Loaded file twothreetrees.lsp
+T
+[2]> (test)
+Add a 
+ (A) 
+Add l 
+ (A)(L) 
+Add g 
+ (G) 
+ (A)  (L) 
+Add o 
+ (G) 
+ (A)  (L)(O) 
+Add r 
+ (G)(O) 
+ (A)  (L)  (R) 
+Add i 
+ (G)(O) 
+ (A)  (I)(L)  (R) 
+Add t 
+ (G)(O) 
+ (A)  (I)(L)  (R)(T) 
+Add h 
+ (I) 
+ (G)  (O) 
+ (A)  (H)  (L)  (R)(T) 
+Add m 
+ (I) 
+ (G)  (O) 
+ (A)  (H)  (L)(M)  (R)(T) 
+Add s 
+ (I) 
+ (G)  (O)(S) 
+ (A)  (H)  (L)(M)  (R)  (T) 
+Remove t 
+ (I) 
+ (G)  (O) 
+ (A)  (H)  (L)(M)  (R)(S) 
+Remove r,s,l,m 
+ (G)(I) 
+ (A)  (H)  (O) 
+NIL
+[3]> 
+
